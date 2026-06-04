@@ -3,6 +3,8 @@ package org.example.service;
 import lombok.RequiredArgsConstructor;
 import org.example.dto.request.CreateAccountRequestDto;
 import org.example.dto.response.AccountResponseDto;
+import org.example.exception.AccountNotFoundException;
+import org.example.exception.CannotDeleteAccountException;
 import org.example.mapper.AccountMapper;
 import org.example.model.Account;
 import org.example.repository.AccountRepository;
@@ -53,17 +55,15 @@ public class AccountService {
         Account account = findAccount(accountId);
 
         if (accountTransactionRepository.existsByAccountId(accountId)) {
-            throw new RuntimeException(
+            throw new CannotDeleteAccountException(
                     "Account with id " + accountId + " contains transactions and cannot be deleted");
-            //TODO dodac customa
         }
 
         accountRepository.delete(account);
     }
 
-    @Transactional(readOnly = true)
     public Account findAccount(Long accountId) {
         return accountRepository.findById(accountId)
-                .orElseThrow(); //TODO dodac customa
+                .orElseThrow(() ->  new AccountNotFoundException("Account with id " + accountId + " not found"));
     }
 }

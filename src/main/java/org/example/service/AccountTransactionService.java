@@ -78,7 +78,7 @@ public class AccountTransactionService {
 
     private AccountTransaction findTransaction(Long transactionId) {
         return accountTransactionRepository.findById(transactionId)
-                .orElseThrow(() -> new RuntimeException(
+                .orElseThrow(() -> new TransactionNotFoundException(
                         "Transaction with id " + transactionId + " not found"));
     }
 }
