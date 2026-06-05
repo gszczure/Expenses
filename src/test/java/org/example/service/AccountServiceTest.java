@@ -6,6 +6,8 @@ import org.example.exception.AccountNotFoundException;
 import org.example.exception.CannotDeleteAccountException;
 import org.example.mapper.AccountMapper;
 import org.example.model.Account;
+import org.example.model.AccountTransaction;
+import org.example.model.TransactionType;
 import org.example.repository.AccountRepository;
 import org.example.repository.AccountTransactionRepository;
 import org.junit.jupiter.api.DisplayName;
@@ -17,6 +19,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -152,6 +156,29 @@ class AccountServiceTest {
                 .hasMessage("Account with id " + ACCOUNT_ID + " not found");
     }
 
+    @Test
+    @DisplayName("Should export transactions to csv when account exists")
+    void exportTransactions_shouldReturnCsv_whenAccountExists() {
+
+        Account account = createAccount();
+        AccountTransaction transaction = createExpenseTransaction();
+
+        when(accountRepository.findById(ACCOUNT_ID)).thenReturn(Optional.of(account));
+        when(accountTransactionRepository.findByAccountId(ACCOUNT_ID)).thenReturn(List.of(transaction));
+
+        byte[] result = accountService.exportTransactions(ACCOUNT_ID);
+
+        String csv = new String(result, StandardCharsets.UTF_8);
+
+        assertThat(csv)
+                .contains("Id,Amount,Type,Category,Description,TransactionDate")
+                .contains("1")
+                .contains("40")
+                .contains("Food")
+                .contains("Pizza")
+                .contains("EXPENSE");
+    }
+
     private Account createAccount() {
         return Account.builder()
                 .id(ACCOUNT_ID)
@@ -171,5 +198,17 @@ class AccountServiceTest {
         return new CreateAccountRequestDto(
                 ACCOUNT_NAME
         );
+    }
+
+    private AccountTransaction createExpenseTransaction() {
+        return AccountTransaction.builder()
+                .id(1L)
+                .amount(BigDecimal.valueOf(40))
+                .type(TransactionType.EXPENSE)
+                .category("Food")
+                .description("Pizza")
+                .transactionDate(LocalDate.now())
+                .account(createAccount())
+                .build();
     }
 }

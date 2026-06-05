@@ -17,8 +17,10 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
@@ -26,8 +28,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(AccountController.class)
 @Import(GlobalExceptionHandler.class)
@@ -137,6 +138,29 @@ class AccountControllerTest {
                 .andExpect(jsonPath("$.status").value(409))
                 .andExpect(jsonPath("$.message")
                         .value("Account with id [1] contains transactions and cannot be deleted"));
+    }
+
+    @Test
+    @DisplayName("Should export transactions to csv when account exists")
+    void exportTransactions_shouldReturnCsv_whenAccountExists() throws Exception {
+
+        byte[] csv = """
+                Id,Amount,Type,Category,Description,TransactionDate
+                1,100.00,EXPENSE,Food,Pizza,2026-06-01
+                """.getBytes(StandardCharsets.UTF_8);
+
+        when(accountService.exportTransactions(ACCOUNT_ID)).thenReturn(csv);
+
+        mockMvc.perform(get("/accounts/{id}/transactions/export", ACCOUNT_ID))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Content-Disposition",
+                        "attachment; filename=transactions.csv"))
+                .andExpect(header().string("Content-Type",
+                        containsString("text/csv")))
+                .andExpect(content().string(
+                        containsString("Id,Amount,Type,Category,Description,TransactionDate")))
+                .andExpect(content().string(
+                        containsString("1,100.00,EXPENSE,Food,Pizza,2026-06-01")));
     }
 
     private AccountResponseDto createAccountResponseDto() {
