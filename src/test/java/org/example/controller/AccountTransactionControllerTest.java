@@ -56,7 +56,7 @@ class AccountTransactionControllerTest {
     @DisplayName("Should return transactions")
     void getTransactions_shouldReturnTransactions() throws Exception {
 
-        when(accountTransactionService.getTransactions()).thenReturn(List.of(createTransactionResponseDto()));
+        when(accountTransactionService.getTransactions(null, null, null)).thenReturn(List.of(createTransactionResponseDto()));
 
         mockMvc.perform(get("/transactions"))
                 .andExpect(status().isOk())

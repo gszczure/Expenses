@@ -55,15 +55,48 @@ class AccountTransactionServiceTest {
         TransactionResponseDto firstResponse = createTransactionResponseDto();
         TransactionResponseDto secondResponse = createTransactionResponseDto();
 
-        when(accountTransactionRepository.findAll()).thenReturn(List.of(firstTransaction, secondTransaction));
+        when(accountTransactionRepository.findTransactions(null, null, null)).thenReturn(List.of
+                (firstTransaction, secondTransaction));
         when(accountTransactionMapper.mapToAccountTransactionResponseDto(firstTransaction)).thenReturn(firstResponse);
         when(accountTransactionMapper.mapToAccountTransactionResponseDto(secondTransaction)).thenReturn(secondResponse);
 
-        List<TransactionResponseDto> result = accountTransactionService.getTransactions();
+        List<TransactionResponseDto> result = accountTransactionService.getTransactions(null, null,
+                null);
 
         assertThat(result)
                 .hasSize(2)
                 .containsExactly(firstResponse, secondResponse);
+    }
+
+    @DisplayName("Should return transactions when category filter is provided")
+    @Test
+    void getTransactions_shouldReturnTransactions_whenCategoryFilterIsProvided() {
+
+        String category = "Food";
+
+        AccountTransaction transaction = createExpenseTransaction().category(category).build();
+        TransactionResponseDto response = createTransactionResponseDto();
+
+        when(accountTransactionRepository.findTransactions(null, null, category))
+                .thenReturn(List.of(transaction));
+        when(accountTransactionMapper.mapToAccountTransactionResponseDto(transaction)).thenReturn(response);
+
+        List<TransactionResponseDto> result = accountTransactionService.getTransactions(null, null, category);
+
+        assertThat(result)
+                .hasSize(1);
+    }
+
+    @Test
+    @DisplayName("Should throw exception when from date is after to date")
+    void getTransactions_shouldThrowIllegalArgumentException_whenFromDateIsAfterToDate() {
+
+        LocalDate from = LocalDate.of(2026, 12, 31);
+        LocalDate to = LocalDate.of(2026, 1, 1);
+
+        assertThatThrownBy(() -> accountTransactionService.getTransactions(from, to, null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("From date cannot be after to date");
     }
 
     @Test
