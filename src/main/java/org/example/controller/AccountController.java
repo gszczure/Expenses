@@ -5,7 +5,9 @@ import lombok.RequiredArgsConstructor;
 import org.example.dto.request.CreateAccountRequestDto;
 import org.example.dto.response.AccountResponseDto;
 import org.example.service.AccountService;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -44,5 +46,13 @@ public class AccountController {
         return ResponseEntity
                 .noContent()
                 .build();
+    }
+
+    @GetMapping("/{id}/transactions/export")
+    public ResponseEntity<byte[]> exportTransactions(@PathVariable Long id) {
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=transactions.csv")
+                .contentType(MediaType.parseMediaType("text/csv"))
+                .body(accountService.exportTransactions(id));
     }
 }

@@ -25,4 +25,6 @@ public interface AccountTransactionRepository extends JpaRepository<AccountTrans
             @Param("to") LocalDate to,
             @Param("category") String category
     );
+
+    List<AccountTransaction> findByAccountId(Long accountId);
 }

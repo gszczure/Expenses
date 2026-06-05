@@ -7,12 +7,14 @@ import org.example.exception.AccountNotFoundException;
 import org.example.exception.CannotDeleteAccountException;
 import org.example.mapper.AccountMapper;
 import org.example.model.Account;
+import org.example.model.AccountTransaction;
 import org.example.repository.AccountRepository;
 import org.example.repository.AccountTransactionRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 @Service
@@ -65,5 +67,30 @@ public class AccountService {
     public Account findAccount(Long accountId) {
         return accountRepository.findById(accountId)
                 .orElseThrow(() ->  new AccountNotFoundException("Account with id " + accountId + " not found"));
+    }
+
+    @Transactional(readOnly = true)
+    public byte[] exportTransactions(Long accountId) {
+
+        findAccount(accountId);
+
+        List<AccountTransaction> transactions = accountTransactionRepository.findByAccountId(accountId);
+
+        StringBuilder csv = new StringBuilder();
+
+        csv.append("Id,Amount,Type,Category,Description,TransactionDate\n");
+
+        transactions.forEach(transaction ->
+                csv.append(transaction.getId()).append(",")
+                        .append(transaction.getAmount()).append(",")
+                        .append(transaction.getType()).append(",")
+                        .append(transaction.getCategory()).append(",")
+                        .append(transaction.getDescription() == null ? "" : transaction.getDescription())
+                        .append(",")
+                        .append(transaction.getTransactionDate())
+                        .append("\n"));
+
+        return csv.toString()
+                .getBytes(StandardCharsets.UTF_8);
     }
 }
