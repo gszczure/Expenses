@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -19,9 +20,12 @@ public class TransactionController {
     private final AccountTransactionService accountTransactionService;
 
     @GetMapping
-    public ResponseEntity<List<TransactionResponseDto>> getTransactions() {
-        return ResponseEntity
-                .ok(accountTransactionService.getTransactions());
+    public ResponseEntity<List<TransactionResponseDto>> getTransactions(
+            @RequestParam(required = false) LocalDate from,
+            @RequestParam(required = false) LocalDate to,
+            @RequestParam(required = false) String category) {
+
+        return ResponseEntity.ok(accountTransactionService.getTransactions(from, to, category));
     }
 
     @PostMapping

@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -24,8 +25,10 @@ public class AccountTransactionService {
     private final AccountService accountService;
 
     @Transactional(readOnly = true)
-    public List<TransactionResponseDto> getTransactions() {
-        return accountTransactionRepository.findAll()
+    public List<TransactionResponseDto> getTransactions(LocalDate from, LocalDate to, String category) {
+        validateDateRange(from, to);
+
+        return accountTransactionRepository.findTransactions(from, to, category)
                 .stream()
                 .map(accountTransactionMapper::mapToAccountTransactionResponseDto)
                 .toList();
@@ -80,5 +83,11 @@ public class AccountTransactionService {
         return accountTransactionRepository.findById(transactionId)
                 .orElseThrow(() -> new TransactionNotFoundException(
                         "Transaction with id " + transactionId + " not found"));
+    }
+
+    private void validateDateRange(LocalDate from, LocalDate to) {
+        if (from != null && to != null && from.isAfter(to)) {
+            throw new IllegalArgumentException("From date cannot be after to date");
+        }
     }
 }

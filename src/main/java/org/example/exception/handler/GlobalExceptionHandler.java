@@ -99,6 +99,18 @@ public class GlobalExceptionHandler {
                 request.getRequestURI());
     }
 
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalArgumentException(IllegalArgumentException exception,
+                                                         HttpServletRequest request) {
+
+        log.error("From date cannot be after to date", exception);
+
+        return buildResponse(
+                HttpStatus.BAD_REQUEST,
+                exception.getMessage(),
+                request.getRequestURI());
+    }
+
     private ResponseEntity<ErrorResponse> buildResponse(HttpStatus status, String message, String path) {
 
         ErrorResponse errorResponse = new ErrorResponse(
